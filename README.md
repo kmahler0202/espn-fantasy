@@ -20,7 +20,10 @@ ESPN has no public fantasy API. This uses the same undocumented JSON endpoints t
 /plugin install espn-fantasy@espn-fantasy
 ```
 
-**Claude desktop / Cowork**: download `espn-fantasy.plugin` from the [latest release](https://github.com/kmahler0202/espn-fantasy/releases/latest) and add it under Settings → Plugins.
+**Claude desktop (Cowork)**: click **Customize** in the sidebar → **Plugins** → **Add marketplace**, enter `kmahler0202/espn-fantasy`, then find the plugin under **Discover** and click **Install**.
+Or download `espn-fantasy.plugin` from the [latest release](https://github.com/kmahler0202/espn-fantasy/releases/latest) and upload it from the same Plugins page.
+
+On a Team or Enterprise plan, your org admin may need to allow user-added plugins.
 
 You need Python 3.9+ available to Claude. The skill installs `espn-api` itself the first time it runs.
 
