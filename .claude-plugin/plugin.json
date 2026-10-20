@@ -1,0 +1,8 @@
+{
+  "name": "espn-fantasy",
+  "version": "0.3.0",
+  "description": "Read your ESPN fantasy football league and evaluate trades, start/sit and waiver moves with Claude.",
+  "author": { "name": "Kyle Mahler" },
+  "license": "MIT",
+  "keywords": ["fantasy football", "espn", "trades"]
+}

@@ -1,0 +1,10 @@
+# Credentials: never commit
+espn.env
+*.env
+!espn.env.example
+__pycache__/
+*.plugin
+.DS_Store
+.claude/settings.local.json
+.venv/
+venv/

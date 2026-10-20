@@ -1,0 +1,16 @@
+{
+  "name": "espn-fantasy",
+  "owner": {
+    "name": "Kyle Mahler"
+  },
+  "metadata": {
+    "description": "ESPN fantasy football tools for Claude: league data, trade evaluation, start/sit and waivers."
+  },
+  "plugins": [
+    {
+      "name": "espn-fantasy",
+      "source": "./",
+      "description": "Read your ESPN fantasy football league and evaluate trades, start/sit and waiver moves with Claude."
+    }
+  ]
+}
