@@ -31,10 +31,10 @@ You need Python 3.9+ available to Claude. The skill installs `espn-api` itself t
 
 1. Install the plugin (above).
 2. Copy `espn.env.example` to `espn.env` and fill it in:
-   - **League ID**: the number after `leagueId=` in your league's URL.
+   - **Leagues**: `ESPN_LEAGUES=Name:id,Name:id`, where the id is the number after `leagueId=` in each league's URL. The cookies are account-wide, so one file covers all your leagues; pick one with `--league`.
    - **Season**: e.g. `2026`.
    - **espn_s2 / SWID** (private leagues): Chrome → fantasy.espn.com (logged in) → F12 → Application → Cookies → `https://fantasy.espn.com`. Keep the braces on SWID.
-3. Put `espn.env` in your working folder (Claude Code) or a folder you connect to Claude (desktop/Cowork), or just give Claude the values when it asks.
+3. Put `espn.env` in your working folder (Claude Code) or a folder you connect to Claude (desktop/Cowork), or just give Claude the values when it asks. **Using Cowork? Create a new, empty folder just for this** (e.g. `~/espn-fantasy`) and connect it. Claude saves `espn.env` there, so you only set up the cookies once, and they stay out of your other projects.
 4. If your Claude org restricts network access, `lm-api-reads.fantasy.espn.com` must be on the egress allowlist.
 
 **Never commit `espn.env`.** `espn_s2` is effectively a login token for your ESPN account. It's gitignored here. Logging out of ESPN invalidates it.

@@ -12,25 +12,34 @@ it cannot send trades, set lineups or make waiver claims. Say so if the user ask
 
 ## 1. Load config
 
-The script needs `ESPN_LEAGUE_ID`, `ESPN_YEAR`, and, for private leagues, the `ESPN_S2` and `ESPN_SWID`
-browser cookies. It reads them from environment variables or from an env file passed with `--env-file`.
+**Recommended setup:** run this skill in Cowork with a brand-new folder on your computer
+dedicated to it (e.g. `~/espn-fantasy`). The skill saves `espn.env` there, so future
+sessions reuse it instead of grabbing cookies again.
 
-Find an env file in this order:
-1. An `espn.env` in the working directory, or one already written to the scratchpad earlier in the session.
-2. In Cowork / Claude desktop: a connected folder on the user's computer containing `espn.env` (search
-   connected folders for it). Copy its contents into an env file in the scratchpad (`chmod 600` where
-   supported) so the cloud workspace can use it.
-3. Otherwise ask the user for the values. If they don't know how to find them, walk them through it:
-   - **League ID**: the number after `leagueId=` in the URL of their league page on fantasy.espn.com.
-   - **Season**: the year the season started.
-   - **espn_s2 and SWID**: in Chrome while logged in to fantasy.espn.com, open DevTools (F12) →
-     Application → Cookies → `https://fantasy.espn.com`, filter by `espn`, and copy both values.
-     Keep the braces on SWID. Tell them `espn_s2` acts like a login token and should be treated like a password.
-   Write the values to an env file in the scratchpad (`chmod 600` where supported), and offer to save
-   them as `espn.env` in the working directory or a connected folder for next time. Use
-   `espn.env.example` at the plugin root (`<skill_dir>/../../espn.env.example`) as the template.
+Look for an env file in this order:
+1. An `espn.env` in the working directory, or one already in the scratchpad this session.
+2. A connected folder containing `espn.env`. Copy it into the scratchpad (`chmod 600`).
 
-Never put cookie values in memory, in chat summaries, or in any file inside a git repo except a gitignored `espn.env`.
+If none is found, offer the user two ways to connect:
+- **Grab it with Claude in Chrome** (if available): the user logs in to fantasy.espn.com in
+  Chrome and keeps the window visible to click Allow. Confirm the page doesn't show "Log In"
+  (logged-out visitors get an anonymous SWID), then read `espn_s2` and `SWID` from
+  `document.cookie` and list their leagues from the `leagueId` links on the page.
+- **Enter values manually**: walk them through DevTools → Application → Cookies.
+
+Save the values to `espn.env` (in the connected folder when there is one). Write them as
+`ESPN_S2`, `ESPN_SWID` and `ESPN_LEAGUES`, using `espn.env.example` at the plugin root
+(`<skill_dir>/../../espn.env.example`) as the template. Keep the curly braces on `ESPN_SWID`:
+without them ESPN rejects the cookie and the script can't find the user's team. Never echo
+cookie values in chat, memory, or summaries.
+
+In Cowork with no folder connected, suggest the user create a new, empty folder just for this
+skill and connect it, so `espn.env` persists between sessions. Don't save it into a folder that
+holds other projects or a git repo.
+
+**Multiple leagues:** the cookies are account-wide, so one `espn.env` covers every league.
+Store all of the user's leagues as `ESPN_LEAGUES=Name:id,Name:id`. If there's more than one,
+ask which league to use at the start of each session.
 
 ## 2. Run the script
 
@@ -39,10 +48,11 @@ Add `--break-system-packages` only if pip refuses because the Python is external
 cloud sandboxes).
 
 ```
-python3 <skill_dir>/scripts/espn.py --env-file <env> <command> [--json]
+python3 <skill_dir>/scripts/espn.py --env-file <env> [--league NAME_OR_ID] <command> [--json]
 ```
 
-Use `python` instead of `python3` on Windows.
+Use `python` instead of `python3` on Windows. Pass `--league` (a name from `ESPN_LEAGUES` or a
+numeric ID) whenever the env file lists more than one league.
 
 | Command | Use for |
 |---|---|

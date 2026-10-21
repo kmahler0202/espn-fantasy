@@ -2,12 +2,13 @@
 """Read-only CLI over ESPN's undocumented fantasy football API (via the espn-api library).
 
 Config comes from environment variables, optionally loaded from an env file:
-  ESPN_LEAGUE_ID   required
+  ESPN_LEAGUES     leagues on the account as Name:id,Name:id (pick one with --league)
+  ESPN_LEAGUE_ID   single league ID (used when ESPN_LEAGUES is not set)
   ESPN_YEAR        season (defaults to the current NFL season)
   ESPN_S2, ESPN_SWID   required for private leagues (browser cookies)
 
 Usage:
-  espn.py [--env-file PATH] [--json] <command> [options]
+  espn.py [--env-file PATH] [--league NAME_OR_ID] [--json] <command> [options]
 
 Commands:
   league                         settings, scoring type, roster slots, trade deadline
@@ -63,10 +64,43 @@ def default_season():
     return today.year if today.month >= 3 else today.year - 1
 
 
-def get_league():
-    lid = os.environ.get("ESPN_LEAGUE_ID")
-    if not lid:
-        sys.exit("ESPN_LEAGUE_ID is not set. Provide an env file (--env-file) or environment variables.")
+def parse_leagues(raw):
+    out = []
+    for item in (raw or "").split(","):
+        item = item.strip()
+        if not item:
+            continue
+        name, _, lid = item.rpartition(":")
+        if not lid.strip().isdigit():
+            sys.exit(f"Bad ESPN_LEAGUES entry '{item}'. Expected Name:id.")
+        out.append((name.strip() or lid.strip(), lid.strip()))
+    return out
+
+
+def resolve_league_id(query):
+    leagues = parse_leagues(os.environ.get("ESPN_LEAGUES"))
+    if not leagues and os.environ.get("ESPN_LEAGUE_ID"):
+        leagues = [(os.environ["ESPN_LEAGUE_ID"], os.environ["ESPN_LEAGUE_ID"])]
+    if query:
+        q = query.strip().lower()
+        hits = [lid for name, lid in leagues if q == lid or q == name.lower()]
+        hits = hits or [lid for name, lid in leagues if q in name.lower()]
+        if len(hits) == 1:
+            return hits[0]
+        if not hits and q.isdigit():
+            return q
+        names = ", ".join(f"{n} ({i})" for n, i in leagues) or "none configured"
+        sys.exit(f"League '{query}' matched {len(hits)} leagues. Options: {names}")
+    if not leagues:
+        sys.exit("No league configured. Set ESPN_LEAGUES (or ESPN_LEAGUE_ID) in the env file, or pass --league ID.")
+    if len(leagues) > 1:
+        names = ", ".join(f"{n} ({i})" for n, i in leagues)
+        sys.exit(f"Several leagues configured; pass --league. Options: {names}")
+    return leagues[0][1]
+
+
+def get_league(query=None):
+    lid = resolve_league_id(query)
     year = int(os.environ.get("ESPN_YEAR") or default_season())
     s2, swid = os.environ.get("ESPN_S2"), os.environ.get("ESPN_SWID")
     try:
@@ -397,6 +431,7 @@ def print_human(cmd, data):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--env-file")
+    ap.add_argument("--league", help="league name from ESPN_LEAGUES, or a numeric league ID")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("league")
@@ -414,7 +449,7 @@ def main():
 
     if a.env_file:
         load_env_file(a.env_file)
-    L = get_league()
+    L = get_league(a.league)
     load_byes(L)
     fn = {"league": cmd_league, "standings": cmd_standings, "roster": cmd_roster, "matchup": cmd_matchup,
           "free-agents": cmd_free_agents, "trend": cmd_trend, "trade-eval": cmd_trade_eval, "byes": cmd_byes,
